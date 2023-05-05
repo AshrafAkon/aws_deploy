@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ECS cluster launchtype EC2.
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: dev
+    Description: "A name that will be used to namespace all cluster resources."
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    Default: t3.small
+    AllowedValues: [t2.micro, t3.small, t2.medium]
+    ConstraintDescription: Please choose a valid instance type.
+  DesiredCapacity:
+    Type: Number
+    # Default: "4"
+    Description: Number of EC2 instances to launch in your ECS cluster.
+  MaxSize:
+    Type: Number
+    Default: "8"
+    Description: Maximum number of EC2 instances that can be launched in your ECS cluster.
+  MinSize:
+    Type: Number
+    Default: "2"
+    Description: Mnimum number of EC2 instances that can be launched in your ECS cluster.
+  ECSAMI:
+    Description: AMI ID
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id
+
+  MountPoint:
+    Description: The Linux mount point for the EFS volume
+    Type: String
+    MinLength: "1"
+    Default: /home/ec2-user/efsdata
+  # VolumeName:
+  #   Description: The name to be used for the EFS volume
+  #   Type: String
+  #   MinLength: "1"
+  #   Default: themeEfsVolume
+
+Resources:
+  # ECS Resources
+  ECSCluster:
+    Type: AWS::ECS::Clusterr
+    Properties:
+      ClusterName: !Sub ${EnvironmentName}-ec2
+
+  
+Outputs:
+  ClusterName:
+    Description: The name of the ECS cluster
+    Value: !Ref "ECSCluster"
+    Export:
+      Name: !Sub ${EnvironmentName}:ClusterName
+
+  MountPoint:
+    Value:
+      Ref: MountPoint
+    Export:
+      Name: !Sub ${EnvironmentName}:EfsMountPoint

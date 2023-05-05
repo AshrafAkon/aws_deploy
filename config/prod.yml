@@ -1,0 +1,50 @@
+# Use this file as an example config file
+CodestarConnectionArn: arn:aws:codestar-connections:us-east-1:123456789012:connection/prod-prod-abcd-1234-abcd-1234567890ab
+Ec2DesiredCapacity: 3
+DBInstanceClass: db.t3.medium
+core:
+  code-pipeline-artifact-bucket:
+    ShortName: artifact-bucket
+  ecs-roles:
+    ShortName: roles
+  alb-external:
+    ShortName: alb
+  vpc:
+  efs:
+  ecs:
+  rds:
+  efs-backup:
+    ShortName: efs-backup
+  ecs-sns:
+    ShortName: ecs-sns
+
+service:
+  test1-pipeline:
+    ServiceUrl: test1.example.com
+    FullGithubRepositoryId: RandomUser/random-repo-1
+    Branch: dev
+    ALBPriority: 1
+    DesiredCount: 1
+
+
+  test2-pipeline:
+    ServiceUrl: test2.random.com
+    FullGithubRepositoryId: RandomUser/random-repo-4
+    Branch: feature-x
+    ALBPriority: 4
+    DesiredCount: 1
+
+
+  test3-pipeline:
+    Branch: develop
+    FullGithubRepositoryId: RandomUser/random-repo-10
+    DesiredCount: 1
+    ALBPriority: 10
+    ServiceUrl: test4.example.com
+
+
+  random-test4-server-pipeline:
+    ServiceUrl: test4.example.com
+    ALBPriority: 12
+    DesiredCount: 1
+    ShortName: test4
