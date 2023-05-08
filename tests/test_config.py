@@ -99,6 +99,8 @@ DBInstanceClass: "db.t3.micro"
 core:
   core-example:
     ShortName: core
+lambda:
+  rds-opeartion:
 service:
   service-example:
     ShortName: service
