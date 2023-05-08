@@ -1,11 +1,7 @@
 import boto3
 from mypy_boto3_cloudformation import CloudFormationClient
 
-from aws_deploy.config import Config, ServiceType, console
-
-
-def full_stack_name(t_type: ServiceType, t_name: str):
-    return f"{Config().ENV}-{t_type.value}-{t_name}"
+from aws_deploy.config import Config, console
 
 
 def db_host():

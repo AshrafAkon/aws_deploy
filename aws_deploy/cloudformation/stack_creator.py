@@ -8,7 +8,6 @@ from aws_deploy.cloudformation.stack import (STACK_FAILED_STATUS_LIST,
 # from aws_deploy.cloudformation.stack_deleter import StackDeleter
 from aws_deploy.cloudformation.template import CloudformationTemplate
 from aws_deploy.config import Config, console
-from aws_deploy.utils import full_stack_name
 
 # def permitted_on(env: str):
 
@@ -34,9 +33,7 @@ class StackCreator:
         self.cf: CloudFormationClient = boto3.client(
             'cloudformation', region_name=self.config.REGION)
         self.template = CloudformationTemplate.from_short_name(short_name)
-        self.stack_name = full_stack_name(
-            self.template.service.Type,
-            self.template.service.Name)
+        self.stack_name = self.template.stack_name()
 
     # @permitted_on('dev')
 
