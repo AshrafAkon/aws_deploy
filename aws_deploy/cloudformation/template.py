@@ -51,5 +51,8 @@ class CloudformationTemplate:
     def add_resource(self, name: str, definition: dict):
         self.content[name] = definition
 
+    def stack_name(self):
+        return f"{Config().ENV}-{self.service.Type.value}-{self.service.Name}"
+
     def __str__(self) -> str:
         return dump_yaml(self.content)

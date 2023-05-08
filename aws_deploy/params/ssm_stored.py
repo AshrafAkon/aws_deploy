@@ -50,9 +50,6 @@ class SSMStored:
 
         )
 
-    # def ssm_param_name(self, param_name: str):
-    #     return f"{Config().ENV}-{self.template.name}-{param_name}"
-
     def get_parameter(self, ssm_param_name: str):
         return self.client.get_parameter(
             Name=ssm_param_name, WithDecryption=True).get('Parameter')

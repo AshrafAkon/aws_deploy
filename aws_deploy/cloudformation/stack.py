@@ -17,15 +17,15 @@ STACK_FAILED_STATUS_LIST = [
 class OutputData:
     OutputKey: str
     OutputValue: str
-    Description: str
-    ExportName: Optional[str]
+    Description: Optional[str] = None
+    ExportName: Optional[str] = None
 
 
 @dataclass
 class CloudformationStack:
     StackId: str
     StackName: str
-    Description: str
+
     Parameters: List[Dict[str, Optional[Union[str, bool]]]]
     CreationTime: datetime
     RollbackConfiguration: Dict[str, Union[List[Dict[str, str]], int]]
@@ -38,6 +38,7 @@ class CloudformationStack:
     EnableTerminationProtection: bool
     DriftInformation: Dict[str, Union[str, datetime]]
 
+    Description: Optional[str] = None
     ChangeSetId: Optional[str] = None
     DeletionTime: Optional[datetime] = None
     LastUpdatedTime: Optional[datetime] = None

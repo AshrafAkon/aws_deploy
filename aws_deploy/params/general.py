@@ -191,7 +191,7 @@ class AlbCertArn(ParameterResolver):
 
 class DbName(ParameterResolver):
     def resolve(self, param_name: str):
-        name = re.sub('[^A-Za-z0-9]+', '', self.template.name.lower())
+        name = re.sub('[^A-Za-z0-9]+', '', self.template.service.Name.lower())
         return name.replace("pipeline", "")
 
 

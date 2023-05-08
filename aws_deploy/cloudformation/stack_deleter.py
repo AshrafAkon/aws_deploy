@@ -5,7 +5,7 @@ import boto3
 from mypy_boto3_cloudformation import CloudFormationClient
 from mypy_boto3_ecr import ECRClient
 
-from aws_deploy.utils import full_stack_name
+from aws_deploy.cloudformation.template import CloudformationTemplate
 from aws_deploy.config import Config, console
 
 deletable_stack_statuses = [
@@ -107,7 +107,7 @@ class StackDeleter:
     def __init__(self, short_name: str) -> None:
         self.cf: CloudFormationClient = boto3.client('cloudformation')
         self.config = Config()
-        self.name = full_stack_name
+        self.template = CloudformationTemplate.from_short_name(short_name)
 
     def list_stacks(self):
         return self.cf.list_stacks(
@@ -164,11 +164,13 @@ class StackDeleter:
             if deleter_cls:
                 deleter_cls(resource).delete()  # type: ignore
 
-    def delete(self, stack_name: str):
+    def delete(self, stack_name: str | None = None):
         console.log(
             f"[red]Deleting stack: [deep_sky_blue3]{stack_name}[/deep_sky_blue3][/red]")  # noqa: E501
         # console.log(
         #     f"[green]Stack last status: [deep_sky_blue3]{stack_name}[/deep_sky_blue3] [/green] ") # noqa: E501
+        if stack_name is None:
+            stack_name = self.template.stack_name()
         self.delete_stack_resources(stack_name)
         self.cf.delete_stack(StackName=stack_name)
         if not self.config.NO_WAIT:

@@ -1,6 +1,5 @@
 import importlib
 import logging
-import os
 
 import click
 
@@ -10,7 +9,6 @@ from aws_deploy.aws_lambda.commands import aws_lambda
 from aws_deploy.cli_common import common_params
 from aws_deploy.cloudformation.stack_creator import StackCreator
 from aws_deploy.cloudformation.stack_deleter import StackDeleter
-from aws_deploy.config import Config, DeploymentEnv
 
 log = logging.getLogger('deploy.cf.create_or_update')
 
@@ -43,10 +41,10 @@ def import_deploy():
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
-@click.option('--prod', is_flag=True, default=False, help="Executes on production")  # noqa: E501
-@click.option('--no-wait', is_flag=True, default=False, help="Wait for status update to complete")  # noqa: E501
+# @click.option('--prod', is_flag=True, default=False, help="Executes on production")  # noqa: E501
+# @click.option('--no-wait', is_flag=True, default=False, help="Wait for status update to complete")  # noqa: E501
 @click.pass_context
-def cli(ctx: click.core.Context, prod: bool, no_wait: bool):
+def cli(ctx: click.core.Context):
     ctx.ensure_object(dict)
     # env = DeploymentEnv.PROD if prod else DeploymentEnv.DEV
 
@@ -72,16 +70,16 @@ def delete_stack(service_name: str):
     StackDeleter(service_name).delete()
 
 
-@cli.command()
-@common_params
-@click.option("--services", is_flag=True, default=False, help="Deletes all service stacks")  # noqa: E501
-@click.option("--doit", is_flag=True, default=False, help="Delete all stacks in configured env")  # noqa: E501
-def delete_stacks(services, doit):
+# @cli.command()
+# @common_params
+# @click.option("--services", is_flag=True, default=False, help="Deletes all service stacks")  # noqa: E501
+# @click.option("--doit", is_flag=True, default=False, help="Delete all stacks in configured env")  # noqa: E501
+# def delete_stacks(services, doit):
 
-    if not doit:
-        return
-    if services:
-        DeleteAllServiceStacks().run()
+#     if not doit:
+#         return
+#     if services:
+#         DeleteAllServiceStacks().run()
 
 
 @cli.command()
@@ -90,7 +88,7 @@ def delete_stacks(services, doit):
 @click.option("--recreate", is_flag=True,  default=False, help="Deletes old stack and creates new one")  # noqa: E501
 def create(name: str, recreate: bool):
     if recreate:
-        DeleteSingleStack(name).run()
+        StackDeleter(name).delete()
     StackCreator(name).create()
 
 

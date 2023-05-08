@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aws-ecs-deploy"
-version = "0.1.0"
+version = "0.1.1"
 description = "Full lifecyle deployment from github to aws ecs"
 authors = [
     "Ashraful Firoz <ashraf.akon201@gmail.com>",

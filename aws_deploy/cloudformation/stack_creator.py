@@ -124,7 +124,7 @@ class StackCreator:
 
             return CloudformationStack.from_dict(  # type : ignore
                 resp['Stacks'][0])  # type : ignore
-        except Exception as e:
+        except self.cf.exceptions.StackNotFoundException as e:
             console.log(e)
             return None
 
