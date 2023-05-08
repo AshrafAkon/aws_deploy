@@ -17,7 +17,8 @@ core:
     ShortName: efs-backup
   ecs-sns:
     ShortName: ecs-sns
-
+lambda:
+  rds-opeartion:
 service:
   test1-pipeline:
     ServiceUrl: test1.example.com
