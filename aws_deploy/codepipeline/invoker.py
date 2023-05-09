@@ -1,5 +1,4 @@
 from typing import Literal
-from aws_deploy.utils import full_stack_name
 
 import boto3
 
@@ -40,7 +39,6 @@ class CodePipelineInvoker:
             return response
         else:
             return None
-    
+
     def run(self, short_name: str):
-        full_stack_name(
-           'service', short_name)
+        pass

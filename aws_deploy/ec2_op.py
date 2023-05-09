@@ -1,28 +1,30 @@
 import boto3
 from mypy_boto3_ec2 import EC2Client
 
+from aws_deploy.cloudformation.parameter.general import AllowedIpParameter
 from aws_deploy.config import Config, console
-from aws_deploy.params.general import AllowedIpParameter, ServiceParameter
 
 
 class EcsEc2:
     def __init__(self) -> None:
         self._instances = None
         self.client: EC2Client = boto3.client('ec2')
+        self.config = Config()
 
     @property
     def instances(self):
         if not self._instances:
-            resp = self.client.describe_instances(Filters=[{'Name': 'tag:deployment',
-                                                            'Values': [config.ENV]},
-                                                           {
-                'Name': 'instance-state-name',
-                'Values': ['running']
-            }])
+            resp = self.client.describe_instances(
+                Filters=[{'Name': 'tag:deployment',
+                          'Values': [str(self.config.ENV)]},
+                         {
+                    'Name': 'instance-state-name',
+                    'Values': ['running']
+                }])
             # type:ignore
             self._instances = []
             for group in resp['Reservations']:
-                self._instances.extend(group['Instances'])
+                self._instances.extend(group['Instances'])  # type: ignore
         return self._instances
 
     def ec2_ips(self):
@@ -32,7 +34,7 @@ class EcsEc2:
     def ec2_ip(self, service_name: str | None = None) -> str:  # type: ignore
         if not service_name:
             return self.instances[0]['PublicIpAddress']
-        cluster = f'{config.ENV}-ec2'
+        cluster = f'{self.config.ENV}-ec2'
         client = boto3.client('ecs')
         task_arn = client.list_tasks(
             cluster=cluster,
@@ -42,11 +44,12 @@ class EcsEc2:
         tasks = client.describe_tasks(
             cluster=cluster, tasks=[task_arn])['tasks']
         container_instance_arn = tasks[0]['containerInstanceArn']
-        con_instance = client.describe_container_instances(cluster=cluster,
+        con_instance = client.describe_container_instances(
+            cluster=cluster,
 
-                                                           containerInstances=[
-                                                               container_instance_arn]
-                                                           )['containerInstances'][0]
+            containerInstances=[
+                container_instance_arn]
+        )['containerInstances'][0]
         ec2_instance_id = con_instance['ec2InstanceId']
         for ec2 in self.instances:
             if ec2['InstanceId'] == ec2_instance_id:
@@ -88,24 +91,25 @@ class EcsEc2:
             MaxResults=123
         )
         return [sg_rule for sg_rule in response['SecurityGroupRules']
-                if sg_rule['IsEgress'] == False]  # type: ignore
+                if sg_rule['IsEgress'] is False]  # type: ignore
 
     def verify_sg_ingress(self, sg_id: str, inbound_rules: list):
-        # pyright: reportTypedDictNotRequiredAccess=false
 
         updatable_rule = None
         for sg_rule in inbound_rules:
             if sg_rule['FromPort'] == 22 and sg_rule['ToPort']:
                 updatable_rule = sg_rule
                 break
-        current_ip = AllowedIpParameter.value()
+        current_ip = AllowedIpParameter.public_ip()+"/32"
         if updatable_rule and updatable_rule['CidrIpv4'] != current_ip:
             allowed_params = ['IpProtocol', 'FromPort', 'ToPort',
-                              'CidrIpv4', 'CidrIpv6', 'PrefixListId', 'ReferencedGroupId']
+                              'CidrIpv4', 'CidrIpv6', 'PrefixListId',
+                              'ReferencedGroupId']
             rule_id = updatable_rule['SecurityGroupRuleId']
 
             updatable_rule = {_key: _val for _key,
-                              _val in updatable_rule.items() if _key in allowed_params}
+                              _val in updatable_rule.items()
+                              if _key in allowed_params}
 
             updatable_rule['CidrIpv4'] = current_ip  # type: ignore
             # updatable_rule['ReferencedGroupId'] = self.sg_id
@@ -113,7 +117,7 @@ class EcsEc2:
                               'SecurityGroupRule': updatable_rule
                               }
                              ]
-            response = self.client.modify_security_group_rules(
+            self.client.modify_security_group_rules(
                 GroupId=sg_id,
                 SecurityGroupRules=sg_rules_list)  # type: ignore
             # response

@@ -2,27 +2,28 @@ import base64
 
 import qrcode
 
-from aws_deploy.adminer.base import AdminerBase
-from aws_deploy.utils import db_host
+from aws_deploy.cloudformation.parameter.ssm_stored import GeneratedSecret
+from aws_deploy.cloudformation.template import CloudformationTemplate
 from aws_deploy.config import Config
-from aws_deploy.params.ssm_stored import GeneratedSecret
 
 
-class OtpQrCodeGenerator(AdminerBase):
+class OtpQrCodeGenerator:
 
     def base32secret(self):
         """Return base32 encoded otp secret
 -
-        Fetches base64 encoded otp secret string. 
-        Coverts it to base32 and returns converted 
+        Fetches base64 encoded otp secret string.
+        Coverts it to base32 and returns converted
         base32 in ascii string format
 
         Returns:
-            str: base32 encoded otp secret 
+            str: base32 encoded otp secret
         """
-        ssm_param_name = GeneratedSecret(
-            'adminer-pipeline', 'OtpSecretStore').ssm_param_name()
-        ssm_param = self.get_parameter(ssm_param_name)
+        template = CloudformationTemplate.from_short_name('adminer')
+        param = GeneratedSecret(
+            template)
+        ssm_param_name = param.ssm_param_name('OtpSecretStore')
+        ssm_param = param.ssm_stored.get_parameter(ssm_param_name)
         # 'P2kib4vBUpZf5A=='
         base64_bytes: str = ssm_param['Value']  # type: ignore
         secret_bytes = base64.b64decode(base64_bytes, validate=True)

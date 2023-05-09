@@ -7,7 +7,8 @@ from mypy_boto3_ssm import SSMClient
 
 from aws_deploy.cloudformation.template import CloudformationTemplate
 from aws_deploy.config import Config, console
-from aws_deploy.params.general import ParameterResolver
+
+from .base import ParameterFactoryBase
 
 # r5aFR0s6_OsqGdSrwbJjv2ub-sq3xS2KNBF_iA
 
@@ -64,7 +65,7 @@ class SSMStored:
     #     return ssm_param_name
 
 
-class UpdatableSSM(ParameterResolver):
+class UpdatableSSM(ParameterFactoryBase):
     def __init__(self, template: CloudformationTemplate):
         self.ssm_stored = SSMStored()
         self.ssm_stored.secret_token = 'replace-this-with-key'
@@ -108,7 +109,7 @@ class UpdatableSSM(ParameterResolver):
 #         return f"{Config().ENV}-{param_name}"
 
 
-class GeneratedSecret(ParameterResolver):
+class GeneratedSecret(ParameterFactoryBase):
     def __init__(self, template: CloudformationTemplate):
         self.ssm_stored = SSMStored()
         self.ssm_stored.secret_token = self.secret_token()

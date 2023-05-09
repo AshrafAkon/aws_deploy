@@ -1,6 +1,5 @@
 import fnmatch
 import re
-from abc import ABC, abstractmethod
 
 import boto3
 import requests
@@ -8,80 +7,16 @@ import requests
 from aws_deploy.cloudformation.template import CloudformationTemplate
 from aws_deploy.config import Config, console
 
-
-class ParameterResolver(ABC):
-
-    def __init__(self, template: CloudformationTemplate):
-        """_summary_
-
-        Args:
-            template (CloudformationTemplate): _description_
-        """
-        self.template = template
-
-    @abstractmethod
-    def resolve(self, parameter_name: str):
-        """
-        Resolve the parameter value.
-        """
-        raise NotImplementedError
+from .base import ParameterFactoryBase
 
 
-# class Parameter:
-#     """Base class of all template parameter
-#     """
-
-#     def __init__(self, template: CloudformationTemplate, parameter_key: str):
-#         """_summary_
-
-#         Args:
-#             template (CloudformationTemplate): _description_
-#             parameter_key (str): _description_
-#         """
-#         self.template = template
-#         self.p_key = parameter_key
-
-#     def param_dict(self, param_value: str):
-#         return {
-#             'ParameterKey': self.p_key,
-#             'ParameterValue': param_value,
-#             'UsePreviousValue': False,
-#         }
-
-#     def add_job(self, jobs: list):
-#         pass
-
-#     def value(self):
-#         raise NotImplementedError
-
-#     def add(self, params: list):
-#         """Adds formatted parameter dict to supplied params list
-
-#         Args:
-#             params (list): current parameter list
-#         """
-#         params.append(self.param_dict(self.value()))
-
-#     def update_body(self, template):
-#         """Updated template body if needed. Example: cert arn
-
-#         Args:
-#             template (_type_): _description_
-#         """
-#         pass
-
-
-class ServiceNotFound(Exception):
-    pass
-
-
-class GeneralParameter(ParameterResolver):
+class GeneralParameter(ParameterFactoryBase):
 
     def resolve(self, param_name: str):
         return str(getattr(self.template.service, param_name))
 
 
-class AllowedIpParameter(ParameterResolver):
+class AllowedIpParameter(ParameterFactoryBase):
     @staticmethod
     def is_valid_ip(ip: str):
         import ipaddress
@@ -91,11 +26,16 @@ class AllowedIpParameter(ParameterResolver):
         except ValueError:
             return False
 
-    def resolve(self, param_name: str):
-
+    @staticmethod
+    def public_ip():
         response = requests.get("http://checkip.amazonaws.com")
         ip = response.text.strip()
         console.log('Current public ip: {}'.format(ip))
+        return ip
+
+    def resolve(self, param_name: str):
+
+        ip = self.public_ip()
         if self.is_valid_ip(ip):
             return f"{ip}/32"
         raise Exception(
@@ -103,7 +43,7 @@ class AllowedIpParameter(ParameterResolver):
             Check your internet connection''')  # type: ignore
 
 
-class ServiceParameter(ParameterResolver):
+class ServiceParameter(ParameterFactoryBase):
     def resolve(self, param_name: str):
         return self.template.service.Name
 
@@ -113,7 +53,7 @@ class ServiceParameter(ParameterResolver):
 #         return f"{config.ENV}-{self.t_name}-codebuild"
 
 
-class EnvironmentName(ParameterResolver):
+class EnvironmentName(ParameterFactoryBase):
     def resolve(self, param_key: str):
         return Config().ENV
 
@@ -123,12 +63,12 @@ class EnvironmentName(ParameterResolver):
 #         return config.CODESTAR_CONNECTION_ARN
 
 
-class ConfigConstant(ParameterResolver):
+class ConfigConstant(ParameterFactoryBase):
     def resolve(self, param_key: str):
         return getattr(Config(), param_key)
 
 
-class AlbCertArn(ParameterResolver):
+class AlbCertArn(ParameterFactoryBase):
     def __init__(self, template: CloudformationTemplate):
         self.cert_arns = list()
         self.config = Config()
@@ -189,7 +129,7 @@ class AlbCertArn(ParameterResolver):
         return main_cert_arn
 
 
-class DbName(ParameterResolver):
+class DbName(ParameterFactoryBase):
     def resolve(self, param_name: str):
         name = re.sub('[^A-Za-z0-9]+', '', self.template.service.Name.lower())
         return name.replace("pipeline", "")

@@ -3,6 +3,7 @@ import shutil
 import tempfile
 from unittest.mock import patch
 
+import pytest
 import yaml
 
 from aws_deploy.config import Config, DeploymentEnv, ServiceConfig, ServiceType
@@ -86,11 +87,16 @@ def test_service_config_optional_values():
     assert service_service.ServiceUrl == "https://example.com"
 
 
+@pytest.fixture(autouse=True)
+def run_before_every_test():
+    Config._instance = None
+
+
 def test_optional_values_from_config_file():
     # Create temporary config directory
     temp_config_dir = tempfile.mkdtemp()
     temp_config_path = os.path.join(
-        temp_config_dir, f"{DeploymentEnv.DEV.value}.yml")
+        temp_config_dir, f"{DeploymentEnv.DEV}.yml")
 
     with open(temp_config_path, "w") as temp_config_file:
         temp_config_file.write("""

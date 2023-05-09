@@ -35,7 +35,7 @@ class CloudformationTemplate:
         service = config.find_service(short_name)
         if service_dir is None:
             template_path = os.path.join(
-                service.Type.value, f"{service.Name}.yml")
+                str(service.Type), f"{service.Name}.yml")
         else:
             template_path = os.path.join(service_dir, f"{service.Name}.yml")
         with open(template_path) as f:
@@ -52,7 +52,7 @@ class CloudformationTemplate:
         self.content[name] = definition
 
     def stack_name(self):
-        return f"{Config().ENV}-{self.service.Type.value}-{self.service.Name}"
+        return f"{Config().ENV}-{self.service.Type}-{self.service.Name}"
 
     def __str__(self) -> str:
         return dump_yaml(self.content)

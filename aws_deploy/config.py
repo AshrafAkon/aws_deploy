@@ -23,11 +23,17 @@ class DeploymentEnv(enum.Enum):
     DEV = 'dev'
     PROD = 'prod'
 
+    def __str__(self):
+        return self.name.lower()
+
 
 class ServiceType(enum.Enum):
     CORE = 'core'
     SERVICE = 'service'
     LAMBDA = 'lambda'
+
+    def __str__(self):
+        return self.name.lower()
 
 
 @dataclass
@@ -69,9 +75,9 @@ class Config(metaclass=Singleton):
     Ec2InstanceType: str = 't3.small'
     ContainerEfsMountpoint: str = '/home/ec2-user/efsdata'
 
-    _instance = None
+    # _instance = None
 
-    ENV = DEPLOY_ENV
+    ENV: DeploymentEnv = DeploymentEnv.DEV
     TAG_ENV = TAG_ENV
     REGION = 'us-east-1'
     NO_WAIT: bool = False
@@ -110,7 +116,7 @@ class Config(metaclass=Singleton):
 
         # open(os.path.join(pathlib.Path(__file__).parent.resolve()
         # current directory should have config folder
-        config_path = os.path.join(cls.CONFIG_DIR, f"{env.value}.yml")
+        config_path = os.path.join(cls.CONFIG_DIR, f"{env}.yml")
         yml_config = cls.yml_config(config_path)
         body_keys = [
             'CodestarConnectionArn',
@@ -120,12 +126,13 @@ class Config(metaclass=Singleton):
             'ContainerEfsMountpoint'
 
         ]
+
         _attrs = {key: val for key, val in yml_config.items()
                   if key in body_keys}
-
+        _attrs['ENV'] = env
         _attrs['services'] = []
         for service_type in ServiceType:
-            for name, service in yml_config[service_type.value].items():
+            for name, service in yml_config[str(service_type)].items():
                 if not service:
                     service = {}
                 if not service.get('ShortName'):

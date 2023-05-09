@@ -9,12 +9,6 @@ from aws_deploy.aws_lambda.env_resolver import LambdaEnvVarResolver
 from aws_deploy.aws_lambda.source_builder import SourceBuilder
 from aws_deploy.cloudformation.stack_creator import StackCreator
 from aws_deploy.config import Config, console
-from aws_deploy.params.general import ParameterResolver
-
-
-class RdsMasterPasswordSSMNameParameter(ParameterResolver):
-    # FIXME
-    pass
 
 
 class CreateLambdaStack(StackCreator):

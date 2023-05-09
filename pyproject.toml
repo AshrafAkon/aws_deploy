@@ -32,6 +32,7 @@ selenium = "^4.9.0"
 mypy-boto3-lambda = "^1.26.122"
 mypy-boto3-ec2 = "^1.26.122"
 mypy-boto3-ecr = "^1.26.0.post1"
+mypy-boto3-s3 = "^1.26.127"
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.0.2"

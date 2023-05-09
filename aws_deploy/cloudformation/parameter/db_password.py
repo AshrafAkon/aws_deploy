@@ -7,11 +7,13 @@ from mypy_boto3_lambda import LambdaClient
 
 from aws_deploy.cloudformation.template import CloudformationTemplate
 from aws_deploy.config import Config, console
-from aws_deploy.params.general import DbName, DBUserName, ParameterResolver
-from aws_deploy.params.ssm_stored import SSMStored
+
+from .base import ParameterFactoryBase
+from .general import DbName, DBUserName
+from .ssm_stored import SSMStored
 
 
-class DBPassword(ParameterResolver):
+class DBPassword(ParameterFactoryBase):
     def __init__(self, template: CloudformationTemplate):
         super().__init__(template)
         self.ssm_stored = SSMStored()

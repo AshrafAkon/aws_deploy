@@ -2,7 +2,7 @@ import boto3
 from botocore import exceptions
 from mypy_boto3_cloudformation import CloudFormationClient
 
-from aws_deploy.cloudformation.param_resolver import ParameterManager
+from aws_deploy.cloudformation.parameter_manager import ParameterManager
 from aws_deploy.cloudformation.stack import (STACK_FAILED_STATUS_LIST,
                                              CloudformationStack)
 # from aws_deploy.cloudformation.stack_deleter import StackDeleter

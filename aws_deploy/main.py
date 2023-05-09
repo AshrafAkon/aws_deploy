@@ -1,4 +1,3 @@
-import importlib
 import logging
 
 import click
@@ -9,6 +8,7 @@ from aws_deploy.aws_lambda.commands import aws_lambda
 from aws_deploy.cli_common import common_params
 from aws_deploy.cloudformation.stack_creator import StackCreator
 from aws_deploy.cloudformation.stack_deleter import StackDeleter
+from aws_deploy.config import console
 
 log = logging.getLogger('deploy.cf.create_or_update')
 
@@ -21,7 +21,6 @@ failed_stack_statuses = [
     'ROLLBACK_FAILED'
     # 'UPDATE_ROLLBACK_COMPLETE'
 ]
-deploy_module_name = "deploy"
 
 
 class StdCommand(click.core.Command):
@@ -33,11 +32,11 @@ class StdCommand(click.core.Command):
 
 def import_deploy():
     try:
-        importlib.import_module(
-            deploy_module_name, package=None)
+        import deploy  # type: ignore # noqa: F401
 
     except (ImportError, AttributeError) as e:
-        click.echo(f"Failed to load or execute deploy module: {e}")
+        console.log(e)
+        console.log("deploy.py not found on current directory.")
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))

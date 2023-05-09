@@ -1,26 +1,26 @@
-import os
+
 
 import pyotp
+from rich.prompt import Prompt
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-from aws_deploy.adminer.base import AdminerBase
 from aws_deploy.adminer.qrcode_generator import OtpQrCodeGenerator
+from aws_deploy.cloudformation.parameter.db_password import DBPassword
+from aws_deploy.cloudformation.template import CloudformationTemplate
+from aws_deploy.config import (Config, ServiceTemplateNotFound, ServiceType,
+                               console)
 from aws_deploy.utils import db_host
-from aws_deploy.config import Config, console
-from aws_deploy.params.db_password import DBPassword
 
 
-class LoginAdminer(AdminerBase):
-    def __init__(self, service_name: str) -> None:
+class LoginAdminer:
+    def __init__(self, short_name: str) -> None:
         self.driver = self._driver()
-        self.service_name = service_name
+        self.template = CloudformationTemplate.from_short_name(short_name)
+        self.config = Config()
 
     def _driver(self) -> webdriver.Chrome:
-
-        driver_path = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), 'chromedriver')
         return webdriver.Chrome(ChromeDriverManager().install())
 
     def fill_host(self):
@@ -29,12 +29,18 @@ class LoginAdminer(AdminerBase):
         db_host_ele.send_keys(db_host())
 
     def fill_username(self):
-        username = 'root' if 'rds' in self.service_name else f'{self.service_name}user'
+        if self.template.service.Type == ServiceType.CORE:
+            username = 'root'
+        else:
+            username = f'{self.template.service.Name}user'
+
         self.driver.find_element(By.ID, 'username').send_keys(username)
 
     def fill_password(self):
-        param = DBPasswordParameter(f'{self.service_name}-pipeline', '')
-        fetched_param = param.get_parameter(param.ssm_param_name())
+        param = DBPassword(self.template)
+        ssm_param_name = param.ssm_param_name()
+
+        fetched_param = param.ssm_stored.get_parameter(ssm_param_name)
         self.driver.find_element(By.NAME, 'auth[password]').send_keys(
             fetched_param['Value'])  # type: ignore
 
@@ -52,8 +58,14 @@ class LoginAdminer(AdminerBase):
         #                              "-p", "5151"], shell=True)
 
         # exit()
+        try:
+            service = self.config.find_service('adminer')
+        except ServiceTemplateNotFound:
+            console.log(
+                "[red]Add adminer service in config/{}.yml[/red]".format(self.config.ENV))  # noqa: E501
+            exit(1)
         self.driver.get(
-            "https://{}".format(config.services['adminer-pipeline'].ServiceUrl))  # type: ignore
+            "https://{}".format(service.ServiceUrl))  # type: ignore
         self.fill_host()
         self.fill_username()
         self.fill_password()
@@ -61,7 +73,8 @@ class LoginAdminer(AdminerBase):
         self.submit_form()
 
         while True:
-            console.log('Type "done" and press Enter to exit...')
-            if input() == "done":
-                return
+            user_input = Prompt.ask('Type "done" and press Enter to exit...')
+            if user_input.strip() == "done":
+                break
+
         # driver.close()
